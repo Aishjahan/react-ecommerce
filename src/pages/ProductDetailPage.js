@@ -1,6 +1,6 @@
-import ProductList from "../features/product-list/components/ProductList"
+import ProductList from "../features/product/components/ProductList"
 import Navbar from "../features/navbar/Navbar"
-import ProductDetail from "../features/product-list/components/ProductDetail"
+import ProductDetail from "../features/product/components/ProductDetail"
 
 const ProductDetailPage = () => {
   return (
