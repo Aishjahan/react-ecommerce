@@ -7,10 +7,14 @@ import {
   updateCartAsync,
   deleteItemFromCartAsync,
 } from "../features/Cart/cartSlice";
-import { createOrderAsync } from "../features/order/orderSlice";
-import { selectLoggedInUser, updateUserAsync } from "../features/auth/authSlice";
-
-
+import {
+  createOrderAsync,
+  selectCurrentOrder,
+} from "../features/order/orderSlice";
+import {
+  selectLoggedInUser,
+  updateUserAsync,
+} from "../features/auth/authSlice";
 
 const Checkout = () => {
   const {
@@ -21,10 +25,9 @@ const Checkout = () => {
   } = useForm();
 
   const user = useSelector(selectLoggedInUser);
-
   const [open, setOpen] = useState(true);
+  const currentOrder = useSelector(selectCurrentOrder);
   const dispatch = useDispatch();
-
   const items = useSelector(selectItems);
   const totalAmount = items.reduce(
     (amount, item) => item.price * item.quantity + amount,
@@ -33,7 +36,7 @@ const Checkout = () => {
   const totalItems = items.reduce((total, item) => item.quantity + total, 0);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const handleQuantity = (e, item) => {
     dispatch(updateCartAsync({ ...item, quantity: +e.target.value }));
@@ -45,21 +48,34 @@ const Checkout = () => {
 
   const handleAddress = (e) => {
     setSelectedAddress(user.addresses[e.target.value]);
-  }
+  };
 
   const handlePayment = (e) => {
     setPaymentMethod(e.target.value);
-  }
+  };
 
   const handleOrder = (e) => {
-    const order = {items, totalAmount, totalItems, user, paymentMethod, selectedAddress}
-    dispatch(createOrderAsync(order))
-  }
+    const order = {
+      items,
+      totalAmount,
+      totalItems,
+      user,
+      paymentMethod,
+      selectedAddress,
+      status: "pending",
+    };
+    dispatch(createOrderAsync(order));
+  };
 
   return (
     <>
       {items.length === 0 && <Navigate to="/"></Navigate>}
-
+      {currentOrder && 
+        <Navigate
+          to={`/order-success/${currentOrder.id}`}
+          replace={true}
+        ></Navigate>
+      }
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-5">
           <div className="lg:col-span-3">
@@ -69,7 +85,10 @@ const Checkout = () => {
               onSubmit={handleSubmit((data) => {
                 console.log(data);
                 dispatch(
-                  updateUserAsync({...user,addresses:[...user.addresses,data]})
+                  updateUserAsync({
+                    ...user,
+                    addresses: [...user.addresses, data],
+                  })
                 );
                 reset();
               })}
@@ -249,14 +268,14 @@ const Checkout = () => {
                     Choose from Existing address.
                   </p>
                   <ul role="list">
-                    {user.addresses.map((address,index) => (
+                    {user.addresses.map((address, index) => (
                       <li
                         key={index}
                         className="flex justify-between gap-x-6 py-5 border-solid border-2 border-gray-200"
                       >
                         <div className="flex min-w-0 gap-x-4 pl-4 pr-4">
                           <input
-                          onChange={handleAddress}
+                            onChange={handleAddress}
                             name="address"
                             type="radio"
                             value={index}
@@ -298,10 +317,10 @@ const Checkout = () => {
                           <input
                             id="cash"
                             onChange={handlePayment}
-                            value='cash'
+                            value="cash"
                             name="payments"
                             type="radio"
-                            checked={paymentMethod === 'cash'}
+                            checked={paymentMethod === "cash"}
                             className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                           />
                           <label
@@ -315,8 +334,8 @@ const Checkout = () => {
                           <input
                             id="card"
                             onChange={handlePayment}
-                            checked={paymentMethod === 'card'}
-                            value='card'
+                            checked={paymentMethod === "card"}
+                            value="card"
                             name="payments"
                             type="radio"
                             className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
@@ -417,7 +436,7 @@ const Checkout = () => {
                 </p>
                 <div className="mt-6">
                   <div
-                  onClick={handleOrder}
+                    onClick={handleOrder}
                     className="flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
                   >
                     Order Now
